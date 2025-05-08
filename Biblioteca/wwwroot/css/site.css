@@ -33,6 +33,7 @@ body {
 
 header {
     box-shadow: rgba(0,0,0,.3) 0px 5px;
+    height: 240px;
 }
 
 #divPesquisa {
@@ -51,3 +52,21 @@ header {
         font-size: 14px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
     }
+
+
+#divLancamentos {
+}
+
+    #divLancamentos .card {
+        margin: 0 32px 0 32px;
+        width: 18rem;
+        text-align: center;
+        box-shadow: rgba(0,0,0,.4) 10px 10px;
+        height: 380px;
+        max-height: 380px;
+    }
+
+        #divLancamentos .card img {
+            height: 200px;
+            width: 150px;
+        }
