@@ -24,7 +24,8 @@ body {
 
 .parallax {
     background-image: url('../img/biblioteca.jpeg');
-    height: 100vh;
+    height: 800px;
+    max-height: 800px;
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
@@ -54,19 +55,21 @@ header {
     }
 
 
-#divLancamentos {
+#divLancamentos, #divTop5 {
+    max-height: 500px;
+    height: 500px;
 }
 
-    #divLancamentos .card {
+    #divLancamentos .card, #divTop5 .card {
         margin: 0 32px 0 32px;
         width: 18rem;
         text-align: center;
         box-shadow: rgba(0,0,0,.4) 10px 10px;
-        height: 380px;
-        max-height: 380px;
+        height: 400px;
+        max-height: 400px;
     }
 
-        #divLancamentos .card img {
+        #divLancamentos .card img, #divTop5 .card img {
             height: 200px;
             width: 150px;
         }
