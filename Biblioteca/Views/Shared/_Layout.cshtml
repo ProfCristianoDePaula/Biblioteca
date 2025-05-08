@@ -5,15 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Biblioteca</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Biblioteca.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <div class="container-fluid mt-3">
-            <button class="btn btn-outline-secondary text-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu">
-                <i class="bi bi-list"></i>
-            </button>
+    <header class="bg-dark text-light m-0 p-0">
+        <div class="container-fluid p-3">
+            <div class="d-flex justify-content-start align-items-center">
+                <div class="w-25">
+                    <button class="btn btn-outline-light fs-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+                <div class="w-50 text-center">
+                    <h1 class="text-center"><i class="bi bi-book"></i> BiblioTech</h1>
+                    <h2 class="text-center">Sistema de Gerenciamento de Livros</h2>
+                </div>
+                <div class="w-25 text-end">
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+
         </div>
     </header>
 
