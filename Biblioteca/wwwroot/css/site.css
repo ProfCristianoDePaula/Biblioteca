@@ -24,8 +24,8 @@ body {
 
 .parallax {
     background-image: url('../img/biblioteca.jpeg');
-    height: 500px;
-    max-height: 500px;
+    height: 550px;
+    max-height: 550px;
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
@@ -56,8 +56,8 @@ header {
 
 
 #divLancamentos, #divTop5, #divAvalicao {
-    max-height: 500px;
-    height: 500px;
+    max-height: 520px;
+    height: 520px;
 }
 
     #divLancamentos .card, #divTop5 .card, #divAvalicao .card {
@@ -73,3 +73,8 @@ header {
             height: 200px;
             width: 150px;
         }
+
+
+.text-shadow-white {
+    text-shadow: 2px 2px 2px white;
+}
