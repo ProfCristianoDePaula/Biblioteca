@@ -9,8 +9,15 @@
     <link rel="stylesheet" href="~/Biblioteca.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <header>
+        <div class="container-fluid mt-3">
+            <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu">
+                Toggle Right Offcanvas
+            </button>
+        </div>
+    </header>
 
-    <div class="offcanvas offcanvas-start" id="demo">
+    <div class="offcanvas offcanvas-start" id="menu">
         <div class="offcanvas-header">
             <h1 class="offcanvas-title">Heading</h1>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -23,13 +30,7 @@
         </div>
     </div>
 
-    <div class="container-fluid mt-3">
-        <h3>Right Offcanvas</h3>
-        <p>The .offcanvas-end class positions the offcanvas to the right of the page.</p>
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#demo">
-            Toggle Right Offcanvas
-        </button>
-    </div>
+
 
 
     <div class="container">
