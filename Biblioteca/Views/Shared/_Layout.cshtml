@@ -22,7 +22,7 @@
                     <h1 class="text-center"><i class="bi bi-book"></i> BiblioTech</h1>
                     <h2 class="text-center">Sistema de Gerenciamento de Livros</h2>
                 </div>
-                <div class="w-25 text-end">
+                <div class="w-25 d-flex justify-content-end fs-4">
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -37,7 +37,7 @@
             </h1>
             <button type="button" class="btn-close text-bg-light" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body">
+        <div class="offcanvas-body d-flex flex-column">
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
                     <a href="#" class="nav-link text-light fs-4 py-3">
@@ -55,6 +55,10 @@
                     </a>
                 </li>
             </ul>
+            <hr />
+            <div class="d-flex justify-content-start fs-5">
+                <partial name="_LoginPartial" />
+            </div>
         </div>
     </div>
 

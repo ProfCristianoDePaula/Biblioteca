@@ -4,17 +4,17 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <div class="d-flex justify-content-end align-items-center">
-        <a class="text-light nav-link me-4 fs-4" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Olá @User.Identity?.Name!</a>
+    <div class="d-flex align-items-center">
+        <a class="text-light nav-link me-4" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Olá @User.Identity?.Name!</a>
         <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button type="submit" class="btn btn-outline-light me-4 fs-4">Sair</button>
+            <button type="submit" class="btn btn-outline-light me-4 fs-5">Sair</button>
         </form>
     </div>
 }
 else
 {
-    <div class="d-flex justify-content-end  align-items-center">
-        <a class="text-light nav-link me-4 fs-4" asp-area="Identity" asp-page="/Account/Register">Cadastre-se</a>
-        <a class="me-4 fs-4 btn btn-outline-light" asp-area="Identity" asp-page="/Account/Login">Entrar</a>
+    <div class="d-flex align-items-center">
+        <a class="text-light nav-link me-4" asp-area="Identity" asp-page="/Account/Register">Cadastre-se</a>
+        <a class="me-4 fs-5 btn btn-outline-light" asp-area="Identity" asp-page="/Account/Login">Entrar</a>
     </div>
 }
