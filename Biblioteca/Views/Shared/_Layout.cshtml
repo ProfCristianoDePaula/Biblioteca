@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/Biblioteca.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header class="bg-dark text-light m-0 p-0">
+    <header class="bg-dark text-light m-0 p-0 fixed-top">
         <div class="container-fluid p-3">
             <div class="d-flex justify-content-start align-items-center">
                 <div class="w-25">
@@ -62,11 +62,8 @@
         </div>
     </div>
 
-
-
-
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="">
+        <main role="main" class="">
             @RenderBody()
         </main>
     </div>
