@@ -78,3 +78,22 @@ header {
 .text-shadow-white {
     text-shadow: 2px 2px 2px white;
 }
+
+#divLogin {
+    margin: auto auto;
+    width: 40%;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border: 2px solid white;
+    padding: 32px;
+    border-radius: 16px;
+    margin-top: 50px;
+}
+
+    #divLogin input {
+        padding: 5px 20px;
+    }
+
+        #divLogin input:last-child {
+            padding: 10px 10px;
+        }
