@@ -10,7 +10,18 @@
         <h3 class="text-center pt-1 pb-3">Bem Vindo ao Bibliotech</h3>
         <form id="account" method="post">
 
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p class="fw-bold">@error.ErrorMessage</p>
+                    }
+                    <button type="button" class="btn-close " data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label asp-for="Input.Email" class="form-label">Email</label>
