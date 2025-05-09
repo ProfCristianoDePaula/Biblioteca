@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Biblioteca.Data;
 
 namespace Biblioteca.Areas.Identity.Pages.Account
 {
@@ -21,11 +23,13 @@ namespace Biblioteca.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, ApplicationDbContext context)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _context = context;
         }
 
         /// <summary>
@@ -116,7 +120,29 @@ namespace Biblioteca.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Usuário Logado.");
+                    // Obtem o usuário logado
+                    var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                    if (user == null)
+                    {
+                        ModelState.AddModelError(string.Empty, "Usuário não encontrado.");
+                        return Page();
+                    }
+
+                    var userId = user.Id; // Obtem o ID do usuário logado
+
+                    // Verifica se o usuário já completou o cadastro na tabela Usuarios
+                    var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.AppUserId == Guid.Parse(userId));
+
+                    // Se o usuário não completou o cadastro, redireciona para a página de cadastro
+                    if (usuario == null)
+                    {
+                        var urlCadastro = Url.Content("~/Usuarios/Create");
+                        return LocalRedirect(urlCadastro);
+                    }
+
+                    // Caso contrário, redireciona para a página inicial
+                    _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

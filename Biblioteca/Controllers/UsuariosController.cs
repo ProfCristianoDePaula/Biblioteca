@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Biblioteca.Data;
 using Biblioteca.Models;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace Biblioteca.Controllers
 {
@@ -58,9 +60,42 @@ namespace Biblioteca.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(usuario);
+                // Set o AppUserId para o ID do usuário logado
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                {
+                    return NotFound();
+                }
+
+                // Verifica se o usuário já existe
+                var existingUser = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.AppUserId == Guid.Parse(userId));
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError("AppUserId", "E-mail já cadastrado.");
+                    return View(usuario);
+                }
+
+                // Define o AppUserId como o ID do usuário logado
+                usuario.AppUserId = Guid.Parse(userId);
+
+                // Faz o vinculo do IndentityUser com o Usuario
+                var identityUser = await _context.Users.FindAsync(userId);
+
+                if (identityUser != null)
+                {
+                    usuario.IdentityUser = identityUser;
+                }
+                else
+                {
+                    ModelState.AddModelError("AppUserId", "Usuário não encontrado.");
+                    return View(usuario);
+                }
+                _context.Add(usuario); // Adiciona o novo usuário ao contexto
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+                // Retorna para a pagina Home/Index
+                return RedirectToAction("Index", "Home");
             }
             return View(usuario);
         }
