@@ -34,24 +34,23 @@ body {
 
 header {
     box-shadow: rgba(0,0,0,.3) 0px 5px;
-    height: 240px;
 }
 
 #divPesquisa {
 }
 
 .form-busca {
-    margin: auto auto;
+    margin: 0 auto;
     text-align: center;
     width: 60%;
     font-size: 12px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
     .form-busca input {
         padding: 5px 20px;
         font-size: 14px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
 
@@ -82,18 +81,18 @@ header {
 #divLogin {
     margin: auto auto;
     width: 40%;
-    font-size: 14px;
+    font-size: 16px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 2px solid white;
     padding: 32px;
     border-radius: 16px;
     margin-top: 50px;
+    box-shadow: rgba(0,0,0,.4) 12px 12px;
 }
 
     #divLogin input {
-        padding: 5px 20px;
+        padding: 15px 20px;
     }
 
         #divLogin input:last-child {
-            padding: 10px 10px;
+            padding: 12px 12px;
         }
