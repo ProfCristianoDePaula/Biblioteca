@@ -151,17 +151,23 @@
 <!-- Modal -->
 <div class="modal fade" id="cadGenero" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content bg-dark text-light">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Cadastrar Gênero Litérário</h1>
+                <button type="button" class="btn-close text-bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                ...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Understood</button>
+            <div class="modal-body bg-dark text-light">
+                <form id="formGeneroModal" action="~/Generos/Create" method="post">
+                    <div class="form-group">
+                        <label for="Nome" class="control-label mb-1">Nome</label>
+                        <input name="Nome" class="form-control p-2" />
+                    </div>
+                    <div class="form-group mt-3 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-light w-25 p-3" data-bs-dismiss="modal">Fechar</button>
+                        <input type="submit" value="Cadastrar" class="btn btn-light w-25 p-3" />
+
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -174,8 +180,45 @@
 
     <script>
         $(document).ready(function () {
+            // Máscaras
             $('input[name="ISBN10"]').mask('0-000-00000-0');
             $('input[name="ISBN13"]').mask('000-0-000-00000-0');
+
+            // Salva os dados do formulário antes do reload
+            $('#formGeneroModal').on('submit', function (e) {
+                e.preventDefault();
+                // Salva todos os campos do formulário principal
+                var formData = {};
+                $('#divLivro :input').each(function () {
+                    if (this.name && (this.type !== 'file')) {
+                        formData[this.name] = $(this).val();
+                    }
+                });
+                localStorage.setItem('livroFormData', JSON.stringify(formData));
+
+                var $form = $(this);
+                $.post($form.attr('action'), $form.serialize())
+                    .done(function () {
+                        $('#cadGenero').modal('hide');
+                        location.reload();
+                    })
+                    .fail(function (xhr) {
+                        $('#cadGenero .modal-body').html($(xhr.responseText).find('.modal-body').html());
+                    });
+            });
+
+            // Restaura os dados do formulário ao carregar a página
+            var savedData = localStorage.getItem('livroFormData');
+            if (savedData) {
+                savedData = JSON.parse(savedData);
+                Object.keys(savedData).forEach(function (key) {
+                    var $field = $('[name="' + key + '"]');
+                    if ($field.length) {
+                        $field.val(savedData[key]);
+                    }
+                });
+                localStorage.removeItem('livroFormData');
+            }
         });
     </script>
 }

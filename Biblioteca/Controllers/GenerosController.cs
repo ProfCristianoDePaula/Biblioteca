@@ -65,6 +65,7 @@ namespace Biblioteca.Controllers
             return View(genero);
         }
 
+
         // GET: Generos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
