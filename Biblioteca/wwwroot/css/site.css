@@ -161,6 +161,11 @@ header {
         padding: 12px;
     }
 
+    #divLivro a {
+        font-size: 16px;
+        padding: 12px;
+    }
+
 
 #listaLivros {
     font-size: 16px;
