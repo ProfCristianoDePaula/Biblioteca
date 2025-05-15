@@ -132,3 +132,31 @@ header {
         font-size: 16px;
         padding: 12px;
     }
+
+
+#divLivro {
+    font-size: 16px;
+    border-radius: 16px;
+    margin-top: 42px;
+    box-shadow: rgba(0,0,0,.4) 12px 12px;
+}
+
+    #divLivro button {
+        width: 250px;
+        padding: 16px;
+    }
+
+    #divLivro input {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    #divLivro select {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    #divLivro textarea {
+        font-size: 16px;
+        padding: 12px;
+    }
