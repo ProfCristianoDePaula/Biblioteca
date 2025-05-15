@@ -48,7 +48,7 @@ namespace Biblioteca.Controllers
         // GET: Livros/Create
         public IActionResult Create()
         {
-            ViewData["GeneroId"] = new SelectList(_context.Generos, "GeneroId", "GeneroId");
+            ViewData["GeneroId"] = new SelectList(_context.Generos.OrderBy(g => g.Nome), "GeneroId", "Nome");
             return View();
         }
 
@@ -65,7 +65,7 @@ namespace Biblioteca.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GeneroId"] = new SelectList(_context.Generos, "GeneroId", "GeneroId", livro.GeneroId);
+            ViewData["GeneroId"] = new SelectList(_context.Generos.OrderBy(g => g.Nome), "GeneroId", "Nome", livro.GeneroId);
             return View(livro);
         }
 
@@ -82,7 +82,7 @@ namespace Biblioteca.Controllers
             {
                 return NotFound();
             }
-            ViewData["GeneroId"] = new SelectList(_context.Generos, "GeneroId", "GeneroId", livro.GeneroId);
+            ViewData["GeneroId"] = new SelectList(_context.Generos.OrderBy(g => g.Nome), "GeneroId", "Nome", livro.GeneroId);
             return View(livro);
         }
 
@@ -118,7 +118,7 @@ namespace Biblioteca.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GeneroId"] = new SelectList(_context.Generos, "GeneroId", "GeneroId", livro.GeneroId);
+            ViewData["GeneroId"] = new SelectList(_context.Generos.OrderBy(g => g.Nome), "GeneroId", "Nome", livro.GeneroId);
             return View(livro);
         }
 

@@ -79,10 +79,6 @@
                             <label asp-for="GeneroId" class="control-label"></label>
                             <select asp-for="GeneroId" class="form-control" asp-items="ViewBag.GeneroId">
                                 <option value="">Selecione um gênero</option>
-                                @foreach (var genero in ViewBag.GeneroId)
-                                {
-                                    <option value="@genero.Value">@genero.Text</option>
-                                }
                             </select>
                         </div>
                     </div>
