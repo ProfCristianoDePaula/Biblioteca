@@ -57,10 +57,46 @@ namespace Biblioteca.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("LivroId,Titulo,Autor,Descricao,Editora,DataPublicacao,NumeroPaginas,Quantidade,UrlCapa,ISBN10,ISBN13,GeneroId")] Livro livro)
+        public async Task<IActionResult> Create([Bind("LivroId,Titulo,Autor,Descricao,Editora,DataPublicacao,NumeroPaginas,Quantidade,UrlCapa,ISBN10,ISBN13,GeneroId")] Livro livro, IFormFile UrlCapa)
         {
             if (ModelState.IsValid)
             {
+                if (UrlCapa != null && UrlCapa.Length > 0)
+                {
+                    // Definir o caminho para salvar a imagem
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Books");
+
+                    // Extrai a extensão do arquivo enviado (ex: .jpg, .png)
+                    var fileExtension = Path.GetExtension(UrlCapa.FileName);
+
+                    // Usa apenas o ID do livro + extensão
+                    var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+
+                    // Se já existir, adiciona um GUID ao nome
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        uniqueFileName = $"{Guid.NewGuid()}_{fileExtension}";
+                        filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    }
+
+                    // Criar a pasta se não existir
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // Salvar o arquivo no diretório
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await UrlCapa.CopyToAsync(fileStream);
+                    }
+
+                    // Atualizar o campo UrlCapa com o caminho relativo
+                    livro.UrlCapa = Path.Combine("Resources", "Books", uniqueFileName).Replace("\\", "/");
+                }
+
                 _context.Add(livro);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -159,6 +195,40 @@ namespace Biblioteca.Controllers
         private bool LivroExists(int id)
         {
             return _context.Livros.Any(e => e.LivroId == id);
+        }
+
+        public IActionResult BuscarCapa(int id)
+        {
+            var livro = _context.Livros.Find(id);
+            if (livro == null || string.IsNullOrEmpty(livro.UrlCapa))
+                return NotFound();
+
+            // Monta o caminho físico absoluto a partir do diretório base do projeto
+            var caminho = Path.Combine(Directory.GetCurrentDirectory(), livro.UrlCapa.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            if (!System.IO.File.Exists(caminho))
+                return NotFound();
+
+            var contentType = "image/*"; // Ajuste se necessário para outros formatos
+            return PhysicalFile(caminho, contentType);
+        }
+
+        // GET: Livros/Search
+        [HttpGet]
+        public async Task<IActionResult> Search(string searchTerm)
+        {
+            var livrosQuery = _context.Livros.Include(l => l.Genero).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                livrosQuery = livrosQuery.Where(l =>
+                    l.Titulo.Contains(searchTerm) ||
+                    l.Autor.Contains(searchTerm)
+                );
+            }
+
+            var livros = await livrosQuery.ToListAsync();
+            return View("Index", livros);
         }
     }
 }

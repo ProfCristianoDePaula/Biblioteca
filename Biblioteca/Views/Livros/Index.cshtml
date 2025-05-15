@@ -1,95 +1,88 @@
 ﻿@model IEnumerable<Biblioteca.Models.Livro>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Cadastro de Livros";
 }
 
-<h1>Index</h1>
+<div id="listaLivros" class="container bg-black text-light p-5">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Titulo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Autor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Descricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Editora)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DataPublicacao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NumeroPaginas)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Quantidade)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UrlCapa)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ISBN10)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ISBN13)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Genero)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Titulo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Autor)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Descricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Editora)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DataPublicacao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NumeroPaginas)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Quantidade)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UrlCapa)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ISBN10)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ISBN13)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Genero.GeneroId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.LivroId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.LivroId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.LivroId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <h1 class="text-center text-light mb-3">Cadastro de Livros</h1>
+
+    <div class="row gap-3 mb-5">
+        <div class="col-3">
+            <a asp-action="Create" class="btn btn-outline-light w-100"><i class="bi bi-plus-circle"></i> Adicionar</a>
+        </div>
+
+        <div class="col">
+            <!-- Campo de Busca -->
+            <form asp-action="Search" method="get" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Buscar por título ou autor..." />
+                    <button type="submit" class="btn btn-outline-light"><i class="bi bi-search"></i> Buscar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th>
+                    Capa
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Titulo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Autor)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Editora)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Genero)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.UrlCapa))
+                        {
+                            <img src="@Url.Action("BuscarCapa", "Livros", new { id = item.LivroId })"
+                                 class="img-thumbnail"
+                                 style="width: 50px; height: 75px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <img src="~/img/sem-imagem.jpg" alt="Sem Capa" class="img-thumbnail" style="width: 50px; height: 75px; object-fit: cover;" />
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Titulo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Autor)
+                    </td>
+
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Editora)
+                    </td>
+
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Genero.Nome)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.LivroId">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.LivroId">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.LivroId">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

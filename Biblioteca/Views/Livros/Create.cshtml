@@ -80,6 +80,7 @@
                             <select asp-for="GeneroId" class="form-control" asp-items="ViewBag.GeneroId">
                                 <option value="">Selecione um gênero</option>
                             </select>
+                            <span asp-validation-for="GeneroId" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-12 col-md">
@@ -113,7 +114,7 @@
                     <div class="col-12">
                         <div class="form-group">
                             <label asp-for="UrlCapa" class="control-label"></label>
-                            <input type="file" asp-for="UrlCapa" class="form-control" accept="image/*" />
+                            <input type="file" asp-for="UrlCapa" name="UrlCapa" class="form-control" accept="image/*" />
                             <span asp-validation-for="UrlCapa" class="text-danger"></span>
                         </div>
                     </div>
