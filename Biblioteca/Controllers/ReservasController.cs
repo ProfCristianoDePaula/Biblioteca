@@ -84,7 +84,6 @@ namespace Biblioteca.Controllers
             {
                 // Livro não encontrado ou sem quantidade disponível
                 ViewData["ErrorMessage"] = "Livro não disponível para reserva.";
-
                 // Busca a lista de livros para exibir na tela de livros
                 var listaLivros = await _context.Livros.Include(l => l.Genero).ToListAsync();
 
