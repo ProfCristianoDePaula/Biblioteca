@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Biblioteca.Data;
 using Biblioteca.Models;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace Biblioteca.Controllers
 {
+    [Authorize]
     public class ReservasController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -59,17 +62,53 @@ namespace Biblioteca.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ReservaId,DataReserva,UsuarioId,LivroId,LivroRetirado,Cancelada")] Reserva reserva)
+        public async Task<IActionResult> Create(int LivroId)
         {
-            if (ModelState.IsValid)
+            // Obtém o usuário logado (Identity)
+            var userName = User.Identity?.Name;
+
+            // Busca o usuário no banco de dados
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.IdentityUser != null && u.IdentityUser.UserName == userName);
+
+            if (usuario == null)
             {
-                _context.Add(reserva);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Usuário não encontrado, redireciona ou exibe erro
+                return Unauthorized();
             }
-            ViewData["LivroId"] = new SelectList(_context.Livros, "LivroId", "LivroId", reserva.LivroId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "UsuarioId", "UsuarioId", reserva.UsuarioId);
-            return View(reserva);
+
+            // Verifica se o livro tem quantidade disponivel para reserva
+            var livro = await _context.Livros.FindAsync(LivroId);
+
+            if (livro == null || livro.Quantidade <= 0)
+            {
+                // Livro não encontrado ou sem quantidade disponível
+                ViewData["ErrorMessage"] = "Livro não disponível para reserva.";
+
+                // Busca a lista de livros para exibir na tela de livros
+                var listaLivros = await _context.Livros.Include(l => l.Genero).ToListAsync();
+
+                return View("~/Views/Livros/Index.cshtml", listaLivros);
+            }
+
+            // Atualiza a quantidade do livro
+            livro.Quantidade -= 1;
+            _context.Update(livro);
+
+            // Cria a reserva
+            var reserva = new Reserva
+            {
+                LivroId = LivroId,
+                UsuarioId = usuario.UsuarioId,
+                DataReserva = DateTime.Now,
+                LivroRetirado = false,
+                Cancelada = false
+            };
+
+            _context.Add(reserva);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Reservas/Edit/5
