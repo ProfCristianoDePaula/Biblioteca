@@ -183,3 +183,14 @@ header {
         font-size: 16px;
         padding: 12px;
     }
+
+.nav-tabs .nav-link:not(.active) {
+    color: #f8f9fa !important;
+}
+
+#divMovimentos {
+    font-size: 16px;
+    border-radius: 16px;
+    margin-top: 42px;
+    box-shadow: rgba(0,0,0,.4) 12px 12px;
+}

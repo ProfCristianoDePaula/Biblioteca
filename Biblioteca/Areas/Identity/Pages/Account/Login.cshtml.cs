@@ -141,8 +141,12 @@ namespace Biblioteca.Areas.Identity.Pages.Account
                         return LocalRedirect(urlCadastro);
                     }
 
-                    // Caso contrário, redireciona para a página inicial
-                    _logger.LogInformation("User logged in.");
+                    // Se o returnUrl for para uma rota POST, redireciona para Home
+                    if (returnUrl.Contains("/Reservas/Create", StringComparison.OrdinalIgnoreCase))
+                        return LocalRedirect(Url.Content("~/"));
+                    else
+                        // Caso contrário, redireciona para a página inicial
+                        _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

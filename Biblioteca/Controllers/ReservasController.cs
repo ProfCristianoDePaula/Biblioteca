@@ -265,5 +265,45 @@ namespace Biblioteca.Controllers
         {
             return _context.Reservas.Any(e => e.ReservaId == id);
         }
+
+        [AllowAnonymous]
+        public async Task<List<Livro>> Top5MaisReservados()
+        {
+            var top5 = await _context.Reservas
+                .GroupBy(r => r.LivroId)
+                .OrderByDescending(g => g.Count())
+                .Take(5)
+                .Select(g => g.Key)
+                .ToListAsync();
+
+            var livros = await _context.Livros
+                .Include(l => l.Genero)
+                .Where(l => top5.Contains(l.LivroId))
+                .ToListAsync();
+
+            // Ordena os livros conforme a ordem do top5
+            livros = top5.Select(id => livros.First(l => l.LivroId == id)).ToList();
+
+            return livros;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Cancelar(int id)
+        {
+            var reserva = await _context.Reservas.FindAsync(id);
+            if (reserva == null)
+            {
+                return NotFound();
+            }
+
+            reserva.Cancelada = true;
+            _context.Update(reserva);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Reserva Cancelada com Sucesso!";
+
+            // Redireciona para a action Retiradas do MovimentacoesController
+            return RedirectToAction("Retiradas", "Movimentacoes");
+        }
     }
 }

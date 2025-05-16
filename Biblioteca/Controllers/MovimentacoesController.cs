@@ -26,6 +26,13 @@ namespace Biblioteca.Controllers
             return View(await applicationDbContext.ToListAsync());
         }
 
+        // GET: Movimentacoes
+        public async Task<IActionResult> Retiradas()
+        {
+            var reservas = _context.Reservas.Include(m => m.Livro).Include(m => m.Usuario).Where(l => l.Cancelada != true).Where(l => l.LivroRetirado != true);
+            return View(await reservas.ToListAsync());
+        }
+
         // GET: Movimentacoes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -165,6 +172,79 @@ namespace Biblioteca.Controllers
         private bool MovimentacaoExists(int id)
         {
             return _context.Movimentacoes.Any(e => e.MovimentacaoId == id);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Busca(string searchTerm)
+        {
+            var reservasQuery = _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .Where(r => !r.Cancelada && !r.LivroRetirado);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                reservasQuery = reservasQuery.Where(r =>
+                    r.Usuario.NomeCompleto.Contains(searchTerm) ||
+                    r.Livro.Titulo.Contains(searchTerm) ||
+                    r.ReservaId.ToString().Contains(searchTerm)
+                );
+            }
+
+            var reservas = await reservasQuery.ToListAsync();
+            return View("Retiradas", reservas);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Retirar(int id)
+        {
+            // Busca a reserva pelo id
+            var reserva = await _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .FirstOrDefaultAsync(r => r.ReservaId == id);
+
+            if (reserva == null || reserva.Cancelada || reserva.LivroRetirado)
+            {
+                TempData["SuccessMessage"] = "Reserva não encontrada ou já retirada/cancelada.";
+                // Retorna para a lista de retiradas mesmo assim
+                var reservas = await _context.Reservas
+                    .Include(r => r.Livro)
+                    .Include(r => r.Usuario)
+                    .Where(r => !r.Cancelada && !r.LivroRetirado)
+                    .ToListAsync();
+                return View("Retiradas", reservas);
+            }
+
+            // Cria a movimentação
+            var movimentacao = new Movimentacao
+            {
+                DataRetirada = DateTime.Now,
+                DataDevolucao = DateTime.Now.AddDays(7),
+                UsuarioId = reserva.UsuarioId,
+                LivroId = reserva.LivroId,
+                LivroDevolvido = false,
+                LivroAtrasado = false
+            };
+
+            _context.Movimentacoes.Add(movimentacao);
+
+            // Marca a reserva como retirada
+            reserva.LivroRetirado = true;
+            _context.Reservas.Update(reserva);
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Retirada Efetuada com Sucesso";
+
+            // Retorna para a lista de retiradas
+            var reservasAtivas = await _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .Where(r => !r.Cancelada && !r.LivroRetirado)
+                .ToListAsync();
+
+            return View("Retiradas", reservasAtivas);
         }
     }
 }
