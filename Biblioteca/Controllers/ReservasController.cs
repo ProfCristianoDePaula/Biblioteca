@@ -62,7 +62,11 @@ namespace Biblioteca.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int LivroId)
+        public async Task<IActionResult> Create(
+     int LivroId,
+     string? searchTerm,
+     string? sortOrder,
+     int page = 1)
         {
             // Obtém o usuário logado (Identity)
             var userName = User.Identity?.Name;
@@ -73,7 +77,6 @@ namespace Biblioteca.Controllers
 
             if (usuario == null)
             {
-                // Usuário não encontrado, redireciona ou exibe erro
                 return Unauthorized();
             }
 
@@ -83,11 +86,69 @@ namespace Biblioteca.Controllers
             if (livro == null || livro.Quantidade <= 0)
             {
                 // Livro não encontrado ou sem quantidade disponível
-                ViewData["ErrorMessage"] = "Livro não disponível para reserva.";
-                // Busca a lista de livros para exibir na tela de livros
-                var listaLivros = await _context.Livros.Include(l => l.Genero).ToListAsync();
+                var livrosQuery = _context.Livros.Include(l => l.Genero).AsQueryable();
 
-                return View("~/Views/Livros/Index.cshtml", listaLivros);
+                // Busca
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    livrosQuery = livrosQuery.Where(l =>
+                        l.Titulo.Contains(searchTerm) ||
+                        l.Autor.Contains(searchTerm)
+                    );
+                }
+
+                // Ordenação
+                switch (sortOrder)
+                {
+                    case "titulo_desc":
+                        livrosQuery = livrosQuery.OrderByDescending(l => l.Titulo);
+                        break;
+                    case "titulo_asc":
+                        livrosQuery = livrosQuery.OrderBy(l => l.Titulo);
+                        break;
+                    case "autor_desc":
+                        livrosQuery = livrosQuery.OrderByDescending(l => l.Autor);
+                        break;
+                    case "autor_asc":
+                        livrosQuery = livrosQuery.OrderBy(l => l.Autor);
+                        break;
+                    case "editora_desc":
+                        livrosQuery = livrosQuery.OrderByDescending(l => l.Editora);
+                        break;
+                    case "editora_asc":
+                        livrosQuery = livrosQuery.OrderBy(l => l.Editora);
+                        break;
+                    case "genero_desc":
+                        livrosQuery = livrosQuery.OrderByDescending(l => l.Genero.Nome);
+                        break;
+                    case "genero_asc":
+                        livrosQuery = livrosQuery.OrderBy(l => l.Genero.Nome);
+                        break;
+                    default:
+                        livrosQuery = livrosQuery.OrderBy(l => l.Titulo);
+                        break;
+                }
+
+                // Paginação
+                int pageSize = 5;
+                int totalCount = await livrosQuery.CountAsync();
+                var livros = await livrosQuery
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var viewModel = new LivroListViewModel
+                {
+                    Livros = livros,
+                    PageIndex = page,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    SearchTerm = searchTerm,
+                    SortOrder = sortOrder,
+                    ErrorMessage = "Livro não disponível para reserva."
+                };
+
+                // Retorna a view de livros com paginação, ordenação e busca
+                return View("~/Views/Livros/Index.cshtml", viewModel);
             }
 
             // Atualiza a quantidade do livro

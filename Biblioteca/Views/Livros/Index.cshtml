@@ -1,8 +1,7 @@
-﻿@model IEnumerable<Biblioteca.Models.Livro>
-
+﻿@model Biblioteca.Models.LivroListViewModel
 @{
     ViewData["Title"] = "Cadastro de Livros";
-    var mensagemErro = ViewData["ErrorMessage"] as string;
+    var mensagemErro = Model.ErrorMessage;
 }
 
 <div id="listaLivros" class="container bg-black text-light p-5">
@@ -24,9 +23,10 @@
 
         <div class="col">
             <!-- Campo de Busca -->
-            <form asp-action="Search" method="get" class="mb-3">
+            <form asp-action="Index" method="get" class="mb-3">
                 <div class="input-group">
-                    <input type="text" name="searchTerm" class="form-control" placeholder="Buscar por título ou autor..." />
+                    <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Buscar por título ou autor..." />
+                    <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
                     <button type="submit" class="btn btn-outline-light"><i class="bi bi-search"></i> Buscar</button>
                 </div>
             </form>
@@ -34,29 +34,104 @@
     </div>
 
 
-    <table class="table table-dark table-striped">
+    <table class="table table-dark text-light table-striped">
         <thead>
             <tr>
+                <th>Capa</th>
                 <th>
-                    Capa
+                    <a class="text-light text-decoration-none" asp-action="Index" asp-route-sortOrder="@ViewData["TituloSortParm"]" asp-route-searchTerm="@Model.SearchTerm">
+                        Título
+                        @if (Model.SortOrder == "titulo_asc")
+                        {
+                            <i class="bi bi-caret-up-fill"></i>
+                        }
+                        else if (Model.SortOrder == "titulo_desc")
+                        {
+                            <i class="bi bi-caret-down-fill"></i>
+                        }
+                    </a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Titulo)
+                    <a class="text-light text-decoration-none" asp-action="Index" asp-route-sortOrder="@ViewData["AutorSortParm"]" asp-route-searchTerm="@Model.SearchTerm">
+                        Autor
+                        @if (Model.SortOrder == "autor_asc")
+                        {
+                            <i class="bi bi-caret-up-fill"></i>
+                        }
+                        else if (Model.SortOrder == "autor_desc")
+                        {
+                            <i class="bi bi-caret-down-fill"></i>
+                        }
+                    </a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Autor)
+                    <a class="text-light text-decoration-none" asp-action="Index" asp-route-sortOrder="@ViewData["EditoraSortParm"]" asp-route-searchTerm="@Model.SearchTerm">
+                        Editora
+                        @if (Model.SortOrder == "editora_asc")
+                        {
+                            <i class="bi bi-caret-up-fill"></i>
+                        }
+                        else if (Model.SortOrder == "editora_desc")
+                        {
+                            <i class="bi bi-caret-down-fill"></i>
+                        }
+                    </a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Editora)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Genero)
+                    <a class="text-light text-decoration-none" asp-action="Index" asp-route-sortOrder="@ViewData["GeneroSortParm"]" asp-route-searchTerm="@Model.SearchTerm">
+                        Gênero
+                        @if (Model.SortOrder == "genero_asc")
+                        {
+                            <i class="bi bi-caret-up-fill"></i>
+                        }
+                        else if (Model.SortOrder == "genero_desc")
+                        {
+                            <i class="bi bi-caret-down-fill"></i>
+                        }
+                    </a>
                 </th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mb-3">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.PageIndex == 1 ? "disabled" : "")">
+                            <a class="page-link bg-dark text-light border border-light"
+                               asp-action="Index"
+                               asp-route-page="@(Model.PageIndex - 1)"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-sortOrder="@Model.SortOrder">
+                                Anterior
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link bg-dark text-light border border-light @(i == Model.PageIndex ? "fw-bold" : "")"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-searchTerm="@Model.SearchTerm"
+                                   asp-route-sortOrder="@Model.SortOrder">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.PageIndex == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link bg-dark text-light border border-light"
+                               asp-action="Index"
+                               asp-route-page="@(Model.PageIndex + 1)"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-sortOrder="@Model.SortOrder">
+                                Próxima
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            @foreach (var item in Model.Livros)
             {
                 <tr>
                     <td>
@@ -77,19 +152,15 @@
                     <td>
                         @Html.DisplayFor(modelItem => item.Autor)
                     </td>
-
                     <td>
                         @Html.DisplayFor(modelItem => item.Editora)
                     </td>
-
                     <td>
                         @Html.DisplayFor(modelItem => item.Genero.Nome)
                     </td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@item.LivroId" class="text-light text-decoration-none me-2"><i class="bi bi-pencil-square"></i></a>
-
                         <a asp-action="Delete" asp-route-id="@item.LivroId" class="text-light text-decoration-none me-2"><i class="bi bi-trash3"></i></a>
-
                         <form asp-controller="Reservas" asp-action="Create" method="post" class="d-inline">
                             <input type="hidden" name="LivroId" value="@item.LivroId" />
                             <button type="submit" class="btn btn-link text-light text-decoration-none p-0 m-0 align-baseline">

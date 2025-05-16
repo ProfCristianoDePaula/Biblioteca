@@ -20,10 +20,86 @@ namespace Biblioteca.Controllers
         }
 
         // GET: Livros
-        public async Task<IActionResult> Index()
+        //public async Task<IActionResult> Index()
+        //{
+        //    var applicationDbContext = _context.Livros.Include(l => l.Genero);
+        //    return View(await applicationDbContext.ToListAsync());
+        //}
+
+        public async Task<IActionResult> Index(
+        string? searchTerm,
+        string? sortOrder,
+        int page = 1)
         {
-            var applicationDbContext = _context.Livros.Include(l => l.Genero);
-            return View(await applicationDbContext.ToListAsync());
+            int pageSize = 5;
+
+            var livrosQuery = _context.Livros.Include(l => l.Genero).AsQueryable();
+
+            // Busca
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                livrosQuery = livrosQuery.Where(l =>
+                    l.Titulo.Contains(searchTerm) ||
+                    l.Autor.Contains(searchTerm)
+                );
+            }
+
+            // Ordenação
+            ViewData["TituloSortParm"] = sortOrder == "titulo_asc" ? "titulo_desc" : "titulo_asc";
+            ViewData["AutorSortParm"] = sortOrder == "autor_asc" ? "autor_desc" : "autor_asc";
+            ViewData["EditoraSortParm"] = sortOrder == "editora_asc" ? "editora_desc" : "editora_asc";
+            ViewData["GeneroSortParm"] = sortOrder == "genero_asc" ? "genero_desc" : "genero_asc";
+
+            switch (sortOrder)
+            {
+                case "titulo_desc":
+                    livrosQuery = livrosQuery.OrderByDescending(l => l.Titulo);
+                    break;
+                case "titulo_asc":
+                    livrosQuery = livrosQuery.OrderBy(l => l.Titulo);
+                    break;
+                case "autor_desc":
+                    livrosQuery = livrosQuery.OrderByDescending(l => l.Autor);
+                    break;
+                case "autor_asc":
+                    livrosQuery = livrosQuery.OrderBy(l => l.Autor);
+                    break;
+                case "editora_desc":
+                    livrosQuery = livrosQuery.OrderByDescending(l => l.Editora);
+                    break;
+                case "editora_asc":
+                    livrosQuery = livrosQuery.OrderBy(l => l.Editora);
+                    break;
+                case "genero_desc":
+                    livrosQuery = livrosQuery.OrderByDescending(l => l.Genero.Nome);
+                    break;
+                case "genero_asc":
+                    livrosQuery = livrosQuery.OrderBy(l => l.Genero.Nome);
+                    break;
+                default:
+                    livrosQuery = livrosQuery.OrderBy(l => l.Titulo);
+                    break;
+            }
+
+            // Paginação
+            int totalCount = await livrosQuery.CountAsync();
+            var livros = await livrosQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var viewModel = new LivroListViewModel
+            {
+                Livros = livros,
+                PageIndex = page,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                SearchTerm = searchTerm,
+                SortOrder = sortOrder,
+                CurrentSort = sortOrder,
+                ErrorMessage = ViewData["ErrorMessage"] as string
+            };
+
+            return View(viewModel);
         }
 
         // GET: Livros/Details/5
