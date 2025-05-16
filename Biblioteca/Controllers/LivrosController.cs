@@ -306,5 +306,19 @@ namespace Biblioteca.Controllers
             var livros = await livrosQuery.ToListAsync();
             return View("Index", livros);
         }
+        public async Task<IActionResult> UltimosLancamentos()
+        {
+            var livros = await _context.Livros
+                .Include(l => l.Genero)
+                .OrderByDescending(l => l.LivroId)
+                .Take(4)
+                .ToListAsync();
+
+            return PartialView("_UltimosLancamentos", livros);
+        }
+
+
+
+
     }
 }
