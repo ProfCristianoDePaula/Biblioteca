@@ -30,6 +30,14 @@ namespace Biblioteca.Controllers
         public async Task<IActionResult> Retiradas()
         {
             var reservas = _context.Reservas.Include(m => m.Livro).Include(m => m.Usuario).Where(l => l.Cancelada != true).Where(l => l.LivroRetirado != true);
+
+            var movimentacoesPendentes = await _context.Movimentacoes
+            .Include(m => m.Livro)
+            .Include(m => m.Usuario)
+            .Where(m => !m.LivroDevolvido)
+            .ToListAsync();
+
+            ViewBag.MovimentacoesPendentes = movimentacoesPendentes;
             return View(await reservas.ToListAsync());
         }
 
@@ -216,6 +224,7 @@ namespace Biblioteca.Controllers
                 return View("Retiradas", reservas);
             }
 
+
             // Cria a movimentação
             var movimentacao = new Movimentacao
             {
@@ -227,15 +236,28 @@ namespace Biblioteca.Controllers
                 LivroAtrasado = false
             };
 
+
+
             _context.Movimentacoes.Add(movimentacao);
 
             // Marca a reserva como retirada
             reserva.LivroRetirado = true;
             _context.Reservas.Update(reserva);
-
             await _context.SaveChangesAsync();
 
+
+            var movimentacoesPendentes = await _context.Movimentacoes
+              .Include(m => m.Livro)
+              .Include(m => m.Usuario)
+              .Where(m => !m.LivroDevolvido)
+              .ToListAsync();
+
+            ViewBag.MovimentacoesPendentes = movimentacoesPendentes;
+
+
+
             TempData["SuccessMessage"] = "Retirada Efetuada com Sucesso";
+
 
             // Retorna para a lista de retiradas
             var reservasAtivas = await _context.Reservas
@@ -245,6 +267,100 @@ namespace Biblioteca.Controllers
                 .ToListAsync();
 
             return View("Retiradas", reservasAtivas);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Devolver(int id)
+        {
+            var movimentacao = await _context.Movimentacoes
+                .Include(m => m.Livro)
+                .FirstOrDefaultAsync(m => m.MovimentacaoId == id);
+
+            if (movimentacao == null || movimentacao.LivroDevolvido)
+            {
+                TempData["SuccessMessage"] = "Movimentação não encontrada ou já devolvida.";
+
+                // Carrega as listas para a view
+                var reservas = await _context.Reservas
+                    .Include(r => r.Livro)
+                    .Include(r => r.Usuario)
+                    .Where(r => !r.Cancelada && !r.LivroRetirado)
+                    .ToListAsync();
+
+                var movimentacoesPendentes = await _context.Movimentacoes
+                    .Include(m => m.Livro)
+                    .Include(m => m.Usuario)
+                    .Where(m => !m.LivroDevolvido)
+                    .ToListAsync();
+
+                ViewBag.MovimentacoesPendentes = movimentacoesPendentes;
+                ViewBag.TabAtiva = "devolucao";
+                return View("Retiradas", reservas);
+            }
+
+            // Marca como devolvido e atualiza a data de devolução
+            movimentacao.LivroDevolvido = true;
+            movimentacao.DataDevolucao = DateTime.Now;
+
+            // Atualiza a quantidade do livro
+            if (movimentacao.Livro != null)
+            {
+                movimentacao.Livro.Quantidade += 1;
+                _context.Livros.Update(movimentacao.Livro);
+            }
+
+            _context.Movimentacoes.Update(movimentacao);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Livro devolvido com sucesso!";
+
+            // Carrega as listas para a view
+            var reservasAtivas = await _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .Where(r => !r.Cancelada && !r.LivroRetirado)
+                .ToListAsync();
+
+            var movimentacoesPendentesAtualizadas = await _context.Movimentacoes
+                .Include(m => m.Livro)
+                .Include(m => m.Usuario)
+                .Where(m => !m.LivroDevolvido)
+                .ToListAsync();
+
+            ViewBag.MovimentacoesPendentes = movimentacoesPendentesAtualizadas;
+            ViewBag.TabAtiva = "devolucao";
+            return View("Retiradas", reservasAtivas);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BuscaRetirada(string searchTerm)
+        {
+            var movimentacoesQuery = _context.Movimentacoes
+                .Include(m => m.Livro)
+                .Include(m => m.Usuario)
+                .Where(m => !m.LivroDevolvido);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                movimentacoesQuery = movimentacoesQuery.Where(m =>
+                    m.Livro.Titulo.Contains(searchTerm) ||
+                    m.Usuario.NomeCompleto.Contains(searchTerm)
+                );
+            }
+
+            var movimentacoesPendentes = await movimentacoesQuery.ToListAsync();
+
+            // Mantém as reservas ativas para a aba de retiradas
+            var reservas = await _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .Where(r => !r.Cancelada && !r.LivroRetirado)
+                .ToListAsync();
+
+            ViewBag.MovimentacoesPendentes = movimentacoesPendentes;
+
+            ViewBag.TabAtiva = "devolucao";
+            return View("Retiradas", reservas);
         }
     }
 }

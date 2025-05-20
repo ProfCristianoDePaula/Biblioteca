@@ -9,22 +9,87 @@ using Biblioteca.Data;
 using Biblioteca.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Biblioteca.Controllers
 {
     public class UsuariosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public UsuariosController(ApplicationDbContext context)
+        public UsuariosController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        // GET: Usuarios
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Usuarios.ToListAsync());
+            var usuarios = await _context.Usuarios.ToListAsync();
+            var rolesPorUsuario = new Dictionary<int, string>();
+
+            foreach (var usuario in usuarios)
+            {
+                if (usuario.AppUserId.HasValue)
+                {
+                    var identityUser = await _userManager.FindByIdAsync(usuario.AppUserId.ToString());
+                    if (identityUser != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(identityUser);
+                        rolesPorUsuario[usuario.UsuarioId] = roles.FirstOrDefault() ?? "Nenhuma";
+                    }
+                    else
+                    {
+                        rolesPorUsuario[usuario.UsuarioId] = "Nenhuma";
+                    }
+                }
+                else
+                {
+                    rolesPorUsuario[usuario.UsuarioId] = "Nenhuma";
+                }
+            }
+
+            ViewBag.RolesPorUsuario = rolesPorUsuario;
+            return View(usuarios);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string searchTerm)
+        {
+            var usuarios = string.IsNullOrWhiteSpace(searchTerm)
+                ? await _context.Usuarios.ToListAsync()
+                : await _context.Usuarios
+                    .Where(u => u.NomeCompleto.Contains(searchTerm) || u.CPF.Contains(searchTerm))
+                    .ToListAsync();
+
+            // Monta o dicionário de roles igual ao Index
+            var rolesPorUsuario = new Dictionary<int, string>();
+            foreach (var usuario in usuarios)
+            {
+                if (usuario.AppUserId.HasValue)
+                {
+                    var identityUser = await _userManager.FindByIdAsync(usuario.AppUserId.ToString());
+                    if (identityUser != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(identityUser);
+                        rolesPorUsuario[usuario.UsuarioId] = roles.FirstOrDefault() ?? "Nenhuma";
+                    }
+                    else
+                    {
+                        rolesPorUsuario[usuario.UsuarioId] = "Nenhuma";
+                    }
+                }
+                else
+                {
+                    rolesPorUsuario[usuario.UsuarioId] = "Nenhuma";
+                }
+            }
+            ViewBag.RolesPorUsuario = rolesPorUsuario;
+
+            return View("Index", usuarios);
         }
 
         // GET: Usuarios/Details/5
@@ -60,14 +125,10 @@ namespace Biblioteca.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Set o AppUserId para o ID do usuário logado
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (userId == null)
-                {
                     return NotFound();
-                }
 
-                // Verifica se o usuário já existe
                 var existingUser = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.AppUserId == Guid.Parse(userId));
                 if (existingUser != null)
@@ -76,10 +137,8 @@ namespace Biblioteca.Controllers
                     return View(usuario);
                 }
 
-                // Define o AppUserId como o ID do usuário logado
                 usuario.AppUserId = Guid.Parse(userId);
 
-                // Faz o vinculo do IndentityUser com o Usuario
                 var identityUser = await _context.Users.FindAsync(userId);
 
                 if (identityUser != null)
@@ -91,10 +150,12 @@ namespace Biblioteca.Controllers
                     ModelState.AddModelError("AppUserId", "Usuário não encontrado.");
                     return View(usuario);
                 }
-                _context.Add(usuario); // Adiciona o novo usuário ao contexto
+                _context.Add(usuario);
                 await _context.SaveChangesAsync();
 
-                // Retorna para a pagina Home/Index
+                // Adiciona o usuário à role "Aluno"
+                await _userManager.AddToRoleAsync(identityUser, "Aluno");
+
                 return RedirectToAction("Index", "Home");
             }
             return View(usuario);
@@ -187,6 +248,28 @@ namespace Biblioteca.Controllers
         private bool UsuarioExists(int id)
         {
             return _context.Usuarios.Any(e => e.UsuarioId == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PromoverParaAdmin(int id)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+            if (usuario == null)
+                return NotFound();
+
+            var identityUser = await _userManager.FindByIdAsync(usuario.AppUserId.ToString());
+            if (identityUser == null)
+                return NotFound();
+
+            // Adiciona à role Admin
+            if (!await _userManager.IsInRoleAsync(identityUser, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(identityUser, "Admin");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

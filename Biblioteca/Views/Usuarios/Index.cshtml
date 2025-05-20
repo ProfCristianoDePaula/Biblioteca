@@ -2,64 +2,62 @@
 
 @{
     ViewData["Title"] = "Index";
+    var rolesPorUsuario = ViewBag.RolesPorUsuario as Dictionary<int, string>;
 }
 
-<h1>Index</h1>
+<div class="row">
+    <div class="col-1 col-md-2 col-lg-2"></div>
+    <div id="divMovimentos" class="col-10 col-md-8 col-lg-8 bg-black text-light m-lg-5 mb-3 p-5">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.NomeCompleto)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CPF)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Celular)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DataNascimento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UrlFoto)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AppUserId)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NomeCompleto)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CPF)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Celular)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DataNascimento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UrlFoto)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppUserId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UsuarioId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UsuarioId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UsuarioId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <h1 class="text-center mb-5">Cadastro de Usuários</h1>
+
+        <div id="divLocalizarUsuario" class="mb-4 px-3">
+            <form asp-action="Buscar" method="get" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Localizar usuário..." />
+                    <button type="submit" class="btn btn-outline-light">
+                        <i class="bi bi-search"></i> Localizar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <table class="table table-dark table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayNameFor(model => model.NomeCompleto)</th>
+                    <th>@Html.DisplayNameFor(model => model.Celular)</th>
+                    <th>@Html.DisplayNameFor(model => model.UrlFoto)</th>
+                    <th>Role</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.NomeCompleto)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Celular)</td>
+                        <td>@Html.DisplayFor(modelItem => item.UrlFoto)</td>
+                        <td>
+                            @(rolesPorUsuario != null && rolesPorUsuario.ContainsKey(item.UsuarioId)
+                                                    ? rolesPorUsuario[item.UsuarioId]
+                                                    : "Nenhuma")
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.UsuarioId" class="nav-link ">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@item.UsuarioId" class="nav-link ">Excluir</a>
+                    </td>
+                    <td>
+                        <form asp-action="PromoverParaAdmin" asp-route-id="@item.UsuarioId" method="post" style="display:inline">
+                            <a type="submit" class="btn btn-outline-light text-decoration-none">Tornar Admin</a>
+                        </form>
+                    </td>
+                </tr>
+                                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-1 col-md-2 col-lg-2"></div>
+</div>

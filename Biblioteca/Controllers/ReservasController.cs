@@ -296,6 +296,11 @@ namespace Biblioteca.Controllers
                 return NotFound();
             }
 
+            // Procurar o livro associado à reserva
+            var livro = await _context.Livros.FindAsync(reserva.LivroId);
+
+            livro.Quantidade += 1; // Aumenta a quantidade do livro
+
             reserva.Cancelada = true;
             _context.Update(reserva);
             await _context.SaveChangesAsync();
