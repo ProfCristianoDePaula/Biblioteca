@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Biblioteca.Data;
+using Biblioteca.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Biblioteca.Data;
-using Biblioteca.Models;
-using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 
 namespace Biblioteca.Controllers
@@ -23,10 +24,33 @@ namespace Biblioteca.Controllers
         }
 
         // GET: Reservas
-        public async Task<IActionResult> Index()
+        [Authorize]
+        public async Task<IActionResult> Index(string searchTerm = null)
         {
-            var applicationDbContext = _context.Reservas.Include(r => r.Livro).Include(r => r.Usuario);
-            return View(await applicationDbContext.ToListAsync());
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return RedirectToAction("Index", "Home");
+
+            var reservasQuery = _context.Reservas
+                .Include(r => r.Livro)
+                .Include(r => r.Usuario)
+                .Where(r => r.Usuario.AppUserId.ToString() == userId);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                reservasQuery = reservasQuery.Where(r =>
+                    r.Livro.Titulo.Contains(searchTerm) ||
+                    r.Usuario.NomeCompleto.Contains(searchTerm));
+            }
+
+            // Ordena: pendentes primeiro, depois retiradas, ambos por data mais antiga
+            var reservas = await reservasQuery
+                .OrderBy(r => r.LivroRetirado) // false (pendente) vem antes de true (retirada)
+                .ThenBy(r => r.DataReserva)
+                .ToListAsync();
+
+            ViewBag.SearchTerm = searchTerm;
+            return View(reservas);
         }
 
         // GET: Reservas/Details/5

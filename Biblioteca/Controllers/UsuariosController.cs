@@ -92,6 +92,8 @@ namespace Biblioteca.Controllers
             return View("Index", usuarios);
         }
 
+
+
         // GET: Usuarios/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -162,18 +164,14 @@ namespace Biblioteca.Controllers
         }
 
         // GET: Usuarios/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [Authorize]
+        public async Task<IActionResult> Edit()
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.AppUserId.ToString() == userId);
             if (usuario == null)
-            {
                 return NotFound();
-            }
+
             return View(usuario);
         }
 
@@ -267,6 +265,28 @@ namespace Biblioteca.Controllers
             if (!await _userManager.IsInRoleAsync(identityUser, "Admin"))
             {
                 await _userManager.AddToRoleAsync(identityUser, "Admin");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RemoverAdmin(int id)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+            if (usuario == null)
+                return NotFound();
+
+            var identityUser = await _userManager.FindByIdAsync(usuario.AppUserId.ToString());
+            if (identityUser == null)
+                return NotFound();
+
+            // Remove da role Admin se estiver nela
+            if (await _userManager.IsInRoleAsync(identityUser, "Admin"))
+            {
+                await _userManager.RemoveFromRoleAsync(identityUser, "Admin");
             }
 
             return RedirectToAction(nameof(Index));

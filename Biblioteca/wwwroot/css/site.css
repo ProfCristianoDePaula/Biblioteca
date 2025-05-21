@@ -204,3 +204,26 @@ header {
         font-size: 16px;
         padding: 12px;
     }
+
+.btn-admin {
+    width: 150px !important;
+    padding: 5px !important;
+}
+
+
+#divMinhasRetiradas {
+    font-size: 14px;
+    border-radius: 16px;
+    margin-top: 42px;
+    box-shadow: rgba(0,0,0,.4) 12px 12px;
+}
+
+    #divMinhasRetiradas button {
+        width: 250px;
+        padding: 16px;
+    }
+
+    #divMinhasRetiradas input {
+        font-size: 14px;
+        padding: 12px;
+    }
