@@ -304,7 +304,19 @@ namespace Biblioteca.Controllers
             }
 
             var livros = await livrosQuery.ToListAsync();
-            return View("Index", livros);
+
+            var viewModel = new LivroListViewModel
+            {
+                Livros = livros,
+                PageIndex = 1,
+                TotalPages = 1,
+                SearchTerm = searchTerm,
+                SortOrder = null,
+                CurrentSort = null,
+                ErrorMessage = null
+            };
+
+            return View("Index", viewModel);
         }
         public async Task<IActionResult> UltimosLancamentos()
         {
