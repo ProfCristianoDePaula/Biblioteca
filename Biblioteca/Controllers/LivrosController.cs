@@ -299,7 +299,8 @@ namespace Biblioteca.Controllers
             {
                 livrosQuery = livrosQuery.Where(l =>
                     l.Titulo.Contains(searchTerm) ||
-                    l.Autor.Contains(searchTerm)
+                    l.Autor.Contains(searchTerm) ||
+                    l.Editora.Contains(searchTerm)
                 );
             }
 
@@ -318,6 +319,7 @@ namespace Biblioteca.Controllers
 
             return View("Index", viewModel);
         }
+
         public async Task<IActionResult> UltimosLancamentos()
         {
             var livros = await _context.Livros
