@@ -198,12 +198,9 @@ namespace Biblioteca.Controllers
             return View(livro);
         }
 
-        // POST: Livros/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("LivroId,Titulo,Autor,Descricao,Editora,DataPublicacao,NumeroPaginas,Quantidade,UrlCapa,ISBN10,ISBN13,GeneroId")] Livro livro)
+        public async Task<IActionResult> Edit(int id, [Bind("LivroId,Titulo,Autor,Descricao,Editora,DataPublicacao,NumeroPaginas,Quantidade,UrlCapa,ISBN10,ISBN13,GeneroId")] Livro livro, IFormFile UrlCapa)
         {
             if (id != livro.LivroId)
             {
@@ -214,6 +211,32 @@ namespace Biblioteca.Controllers
             {
                 try
                 {
+                    if (UrlCapa != null && UrlCapa.Length > 0)
+                    {
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Books");
+                        var fileExtension = Path.GetExtension(UrlCapa.FileName);
+                        var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await UrlCapa.CopyToAsync(fileStream);
+                        }
+
+                        livro.UrlCapa = Path.Combine("Resources", "Books", uniqueFileName).Replace("\\", "/");
+                    }
+                    else
+                    {
+                        // Mantém a capa atual se não for enviado novo arquivo
+                        var livroAtual = await _context.Livros.AsNoTracking().FirstOrDefaultAsync(l => l.LivroId == id);
+                        livro.UrlCapa = livroAtual?.UrlCapa;
+                    }
+
                     _context.Update(livro);
                     await _context.SaveChangesAsync();
                 }
