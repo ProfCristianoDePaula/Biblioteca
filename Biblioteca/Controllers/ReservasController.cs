@@ -23,7 +23,6 @@ namespace Biblioteca.Controllers
             _context = context;
         }
 
-        // GET: Reservas
         [Authorize]
         public async Task<IActionResult> Index(string searchTerm = null)
         {
@@ -34,7 +33,7 @@ namespace Biblioteca.Controllers
             var reservasQuery = _context.Reservas
                 .Include(r => r.Livro)
                 .Include(r => r.Usuario)
-                .Where(r => r.Usuario.AppUserId.ToString() == userId);
+                .Where(r => r.Usuario.AppUserId.ToString() == userId && !r.Cancelada);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -43,13 +42,25 @@ namespace Biblioteca.Controllers
                     r.Usuario.NomeCompleto.Contains(searchTerm));
             }
 
-            // Ordena: pendentes primeiro, depois retiradas, ambos por data mais antiga
             var reservas = await reservasQuery
-                .OrderBy(r => r.LivroRetirado) // false (pendente) vem antes de true (retirada)
+                .OrderBy(r => r.LivroRetirado)
                 .ThenBy(r => r.DataReserva)
                 .ToListAsync();
 
+            // Busca avaliações do usuário logado para os livros das reservas
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.AppUserId.ToString() == userId);
+            var livroIds = reservas.Select(r => r.LivroId).Distinct().ToList();
+            var avaliacoes = await _context.Avaliacoes
+                .Where(a => a.UsuarioId == usuario.UsuarioId && livroIds.Contains(a.LivroId))
+                .ToListAsync();
+
+            // Garante apenas uma avaliação por livro (pega a mais recente)
+            var avaliacoesPorLivro = avaliacoes
+                .GroupBy(a => a.LivroId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.DataAvaliacao).First());
+
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.AvaliacoesPorLivro = avaliacoesPorLivro;
             return View(reservas);
         }
 
@@ -104,6 +115,7 @@ namespace Biblioteca.Controllers
                 return Unauthorized();
             }
 
+            // Verifica se o livro tem quantidade disponivel para reserva
             // Verifica se o livro tem quantidade disponivel para reserva
             var livro = await _context.Livros.FindAsync(LivroId);
 
@@ -333,6 +345,30 @@ namespace Biblioteca.Controllers
 
             // Redireciona para a action Retiradas do MovimentacoesController
             return RedirectToAction("Retiradas", "Movimentacoes");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Cancelar2(int id)
+        {
+            var reserva = await _context.Reservas.FindAsync(id);
+            if (reserva == null)
+            {
+                return NotFound();
+            }
+
+            // Procurar o livro associado à reserva
+            var livro = await _context.Livros.FindAsync(reserva.LivroId);
+
+            livro.Quantidade += 1; // Aumenta a quantidade do livro
+
+            reserva.Cancelada = true;
+            _context.Update(reserva);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Reserva Cancelada com Sucesso!";
+
+            // Redireciona para a action Retiradas do MovimentacoesController
+            return RedirectToAction("Index", "Reservas");
         }
     }
 }

@@ -1,84 +1,108 @@
 ﻿@model Biblioteca.Models.Usuario
 @{
     ViewData["Title"] = "Cadastro de Usuário";
+    var fotoUrl = !string.IsNullOrEmpty(Model.UrlFoto)
+        ? Url.Action("BuscarFoto", "Usuarios", new { id = Model.UsuarioId })
+        : Url.Content("~/img/sem-imagem.jpg");
 }
 
 <div id="divUsuario" class="container bg-black text-light mt-5 fs-5">
     <h4 class="text-center fs-3">Confirme seus Dados</h4>
     <hr />
-    <form asp-action="Edit">
+    <form asp-action="Edit" enctype="multipart/form-data">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <input type="hidden" asp-for="UsuarioId" />
-        <div class="row gap-3 mb-3 mt-2">
-            <div class="col">
-                <div class="form-group">
-                    <label asp-for="NomeCompleto" class="control-label"></label>
-                    <input asp-for="NomeCompleto" class="form-control" />
-                    <span asp-validation-for="NomeCompleto" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <div class="row gap-3 mb-3">
-            <div class="col">
-                <div class="form-group">
-                    <label asp-for="CPF" class="control-label"></label>
-                    <input asp-for="CPF" class="form-control" />
-                    <span asp-validation-for="CPF" class="text-danger"></span>
-                </div>
+        <div class="row ">
+            <div class="col-3 text-center gap-3 mt-4">
+                <img id="fotoPreview" src="@fotoUrl" class="img-thumbnail img-fluid mb-2" style="max-height: 150px;" />
+                <form asp-action="Edit" asp-controller="Usuarios" method="post" enctype="multipart/form-data" id="formAlterarFoto">
+                    <input type="hidden" name="id" value="@Model.UsuarioId" />
+                    <input type="file" asp-for="UrlFoto" id="novaFotoInput" class="d-none" accept="image/*" />
+                    <button type="button" class="btn btn-sm text-light w-100 mt-3" id="btnAlterarFoto"><i class="bi bi-camera"></i> Alterar Foto</button>
+                </form>
             </div>
             <div class="col">
-                <div class="form-group">
-                    <label asp-for="Celular" class="control-label"></label>
-                    <input asp-for="Celular" class="form-control" />
-                    <span asp-validation-for="Celular" class="text-danger"></span>
+                <!-- ...demais campos do formulário de edição... -->
+                <div class="row gap-3 mb-3 mt-2">
+                    <div class="col">
+                        <div class="form-group">
+                            <label asp-for="NomeCompleto" class="control-label"></label>
+                            <input asp-for="NomeCompleto" class="form-control" />
+                            <span asp-validation-for="NomeCompleto" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label asp-for="DataNascimento" class="control-label"></label>
+                            <input type="date" asp-for="DataNascimento" class="form-control" />
+                            <span asp-validation-for="DataNascimento" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="row gap-3 mb-3">
-            <div class="col">
-                <div class="form-group">
-                    <label asp-for="DataNascimento" class="control-label"></label>
-                    <input type="date" asp-for="DataNascimento" class="form-control" />
-                    <span asp-validation-for="DataNascimento" class="text-danger"></span>
+                <div class="row gap-3 mb-3">
+                    <div class="col">
+                        <div class="form-group">
+                            <label asp-for="CPF" class="control-label"></label>
+                            <input asp-for="CPF" class="form-control" />
+                            <span asp-validation-for="CPF" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label asp-for="Celular" class="control-label"></label>
+                            <input asp-for="Celular" class="form-control" />
+                            <span asp-validation-for="Celular" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="col">
-                <div class="form-group">
-                    <label asp-for="UrlFoto" class="control-label"></label>
-                    <input type="file" asp-for="UrlFoto" class="form-control" accept="image/*" />
-                    <span asp-validation-for="UrlFoto" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
 
-        <div class="form-group">
-            <input type="hidden" asp-for="AppUserId" class="form-control" />
-        </div>
-
-        <div class="row gap-3 mb-3">
-            <div class="col">
-                <div class="form-group d-flex justify-content-between pt-4">
-                    <button asp-action="Index" class="btn btn-outline-light fs-5"><i class="bi bi-arrow-clockwise"></i> Voltar</button>
-                    <button type="submit" id="btnSalvar" class="btn btn-light fs-5">
-                        <i class="bi bi-floppy"></i>  Salvar
-                    </button>
+                <div class="form-group">
+                    <input type="hidden" asp-for="AppUserId" class="form-control" />
+                </div>
+                <div class="row gap-3 mb-3">
+                    <div class="col">
+                        <div class="form-group d-flex justify-content-between pt-4">
+                            <button asp-action="Index" class="btn btn-outline-light fs-5"><i class="bi bi-arrow-clockwise"></i> Voltar</button>
+                            <button type="submit" id="btnSalvar" class="btn btn-light fs-5">
+                                <i class="bi bi-floppy"></i>  Salvar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
 
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
         $(document).ready(function () {
-            // Aplica a máscara ao campo CPF
+            // Máscaras
             $('input[name="CPF"]').mask('000.000.000-00');
-            // Aplica a máscara ao campo Celular
             $('input[name="Celular"]').mask('(00) 00000-0000');
+
+            // Abrir seletor de arquivo ao clicar no botão
+            $('#btnAlterarFoto').on('click', function (e) {
+                e.preventDefault();
+                $('#novaFotoInput').click();
+            });
+
+            // Atualizar preview da imagem e enviar formulário ao selecionar arquivo
+            $('#novaFotoInput').on('change', function () {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#fotoPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                    // Envia o formulário após o preview
+                    $('#formAlterarFoto').submit();
+                }
+            });
         });
     </script>
 }

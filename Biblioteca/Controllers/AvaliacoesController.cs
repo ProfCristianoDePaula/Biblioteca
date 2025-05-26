@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Biblioteca.Data;
+using Biblioteca.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Biblioteca.Data;
-using Biblioteca.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Biblioteca.Controllers
 {
@@ -19,11 +21,25 @@ namespace Biblioteca.Controllers
             _context = context;
         }
 
+        [Authorize]
         // GET: Avaliacoes
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Avaliacoes.Include(a => a.Livro).Include(a => a.Usuario);
-            return View(await applicationDbContext.ToListAsync());
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return RedirectToAction("Index", "Home");
+
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.AppUserId.ToString() == userId);
+            if (usuario == null)
+                return RedirectToAction("Index", "Home");
+
+            var avaliacoes = await _context.Avaliacoes
+                .Include(a => a.Livro)
+                .Where(a => a.UsuarioId == usuario.UsuarioId)
+                .OrderByDescending(a => a.DataAvaliacao)
+                .ToListAsync();
+
+            return View(avaliacoes);
         }
 
         // GET: Avaliacoes/Details/5
@@ -59,18 +75,31 @@ namespace Biblioteca.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AvaliacaoId,Nota,Comentario,DataAvaliacao,LivroId,UsuarioId")] Avaliacao avaliacao)
+        public async Task<IActionResult> Create(int LivroId, int Nota, string? Comentario)
         {
-            if (ModelState.IsValid)
+            var userName = User.Identity?.Name;
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.IdentityUser != null && u.IdentityUser.UserName == userName);
+
+            if (usuario == null || Nota < 1 || Nota > 5)
+                return Unauthorized();
+
+            var avaliacao = new Avaliacao
             {
-                _context.Add(avaliacao);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["LivroId"] = new SelectList(_context.Livros, "LivroId", "LivroId", avaliacao.LivroId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "UsuarioId", "UsuarioId", avaliacao.UsuarioId);
-            return View(avaliacao);
+                LivroId = LivroId,
+                UsuarioId = usuario.UsuarioId,
+                Nota = Nota,
+                Comentario = Comentario,
+                DataAvaliacao = DateTime.Now
+            };
+
+            _context.Avaliacoes.Add(avaliacao);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Avaliação registrada com sucesso!";
+            return RedirectToAction("Index", "Reservas");
         }
+
 
         // GET: Avaliacoes/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -95,36 +124,30 @@ namespace Biblioteca.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AvaliacaoId,Nota,Comentario,DataAvaliacao,LivroId,UsuarioId")] Avaliacao avaliacao)
+        public async Task<IActionResult> Edit(int AvaliacaoId, int LivroId, int Nota, string? Comentario)
         {
-            if (id != avaliacao.AvaliacaoId)
-            {
-                return NotFound();
-            }
+            var userName = User.Identity?.Name;
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.IdentityUser != null && u.IdentityUser.UserName == userName);
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(avaliacao);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AvaliacaoExists(avaliacao.AvaliacaoId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["LivroId"] = new SelectList(_context.Livros, "LivroId", "LivroId", avaliacao.LivroId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "UsuarioId", "UsuarioId", avaliacao.UsuarioId);
-            return View(avaliacao);
+            if (usuario == null || Nota < 1 || Nota > 5)
+                return Unauthorized();
+
+            var avaliacao = await _context.Avaliacoes
+                .FirstOrDefaultAsync(a => a.AvaliacaoId == AvaliacaoId && a.UsuarioId == usuario.UsuarioId);
+
+            if (avaliacao == null)
+                return NotFound();
+
+            avaliacao.Nota = Nota;
+            avaliacao.Comentario = Comentario;
+            avaliacao.DataAvaliacao = DateTime.Now;
+
+            _context.Avaliacoes.Update(avaliacao);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Avaliação atualizada com sucesso!";
+            return RedirectToAction("Index", "Reservas");
         }
 
         // GET: Avaliacoes/Delete/5

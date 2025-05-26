@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<Biblioteca.Models.Livro>
 @{
     ViewData["Title"] = "Home Page";
+    var mediasAvaliacoes = ViewBag.MediasAvaliacoes as Dictionary<int, double> ?? new();
 }
 
 <div id="divPesquisa" class="bg-black pt-4 pb-4 text-light">
@@ -27,6 +28,26 @@
                     <h4 class="card-title">@livro.Titulo</h4>
                     <h5 class="lead">@livro.Autor</h5>
                     <p class="mb-1"><span class="badge bg-secondary">@livro.Genero?.Nome</span></p>
+                    @{
+                        var media = mediasAvaliacoes.ContainsKey(livro.LivroId) ? mediasAvaliacoes[livro.LivroId] : 0;
+                        var temAvaliacao = mediasAvaliacoes.ContainsKey(livro.LivroId);
+                    }
+                    <p class="mb-1">
+                        @if (temAvaliacao && media > 0)
+                        {
+                            <span class="text-warning">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= Math.Round(media) ? "bi-star-fill" : "bi-star")"></i>
+                                }
+                            </span>
+                            <span class="ms-2 text-dark fw-bold">(@media.ToString("0.0"))</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Sem Avaliações</span>
+                        }
+                    </p>
                     <p class="text-center">
                         <form asp-controller="Reservas" asp-action="Create" method="post" class="d-inline">
                             <input type="hidden" name="LivroId" value="@livro.LivroId" />
@@ -42,12 +63,12 @@
 </div>
 
 
-
 <div class="m-0 p-0">
     <h2 class="text-center text-light bg-dark m-0 pt-4">TOP 5 - Livros Mais Reservados</h2>
     <div id="divTop5" class="bg-dark m-0 pt-4 d-flex justify-content-evenly flex-wrap">
         @if (ViewBag.LivrosMaisReservados != null)
         {
+            mediasAvaliacoes = ViewBag.MediasAvaliacoes as Dictionary<int, double> ?? new();
             foreach (var livro in (IEnumerable<Biblioteca.Models.Livro>)ViewBag.LivrosMaisReservados)
             {
                 <div class="card text-center mt-2 mb-3" style="width: 16rem;">
@@ -60,6 +81,26 @@
                         <h4 class="card-title">@livro.Titulo</h4>
                         <h5 class="lead">@livro.Autor</h5>
                         <p class="mb-1"><span class="badge bg-secondary">@livro.Genero?.Nome</span></p>
+                        @{
+                            var media = mediasAvaliacoes.ContainsKey(livro.LivroId) ? mediasAvaliacoes[livro.LivroId] : 0;
+                            var temAvaliacao = mediasAvaliacoes.ContainsKey(livro.LivroId);
+                        }
+                        <p class="mb-1">
+                            @if (temAvaliacao && media > 0)
+                            {
+                                <span class="text-warning">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= Math.Round(media) ? "bi-star-fill" : "bi-star")"></i>
+                                    }
+                                </span>
+                                <span class="ms-2 text-dark fw-bold">(@media.ToString("0.0"))</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sem Avaliações</span>
+                            }
+                        </p>
                         <p class="text-center">
                             <form asp-controller="Reservas" asp-action="Create" method="post" class="d-inline">
                                 <input type="hidden" name="LivroId" value="@livro.LivroId" />
@@ -79,72 +120,59 @@
     </div>
 </div>
 
-<!--
+
 <div id="divAvalicao">
-
     <div class="parallax pt-4 pb-5 ">
-        <h2 class="text-center text-black bg-transparent m-0 pt-2 text-shadow-white">Livros com Melhores Avaliações</h2>
-
-        <div class="pt-3 d-flex justify-content-evenly">
-            <div class="card text-center mt-2">
-                <div class="w-100 text-center mt-3">
-                    <img src="~/img/livro.png" class="card-img-top img-fluid" alt="Capa do Livro">
-                </div>
-                <div class="card-body">
-                    <h4 class="card-title">A Fazenda SFantasma</h4>
-                    <h5 class="lead">Gustavo F. Francelin</h5>
-                    <p>Avaliações</p>
-                    <p class="text-center">
-                        <a href="#" class="card-link btn btn-dark">Reservar</a>
-                    </p>
-                </div>
-            </div>
-
-            <div class="card text-center mt-2">
-                <div class="w-100 text-center mt-3">
-                    <img src="~/img/livro.png" class="card-img-top img-fluid" alt="Capa do Livro">
-                </div>
-                <div class="card-body">
-                    <h4 class="card-title">A Fazenda SFantasma</h4>
-                    <h5 class="lead">Gustavo F. Francelin</h5>
-                    <p>Avaliações</p>
-                    <p class="text-center">
-                        <a href="#" class="card-link btn btn-dark">Reservar</a>
-                    </p>
-                </div>
-            </div>
-
-            <div class="card text-center mt-2">
-                <div class="w-100 text-center mt-3">
-                    <img src="~/img/livro.png" class="card-img-top img-fluid" alt="Capa do Livro">
-                </div>
-                <div class="card-body">
-                    <h4 class="card-title">A Fazenda SFantasma</h4>
-                    <h5 class="lead">Gustavo F. Francelin</h5>
-                    <p>Avaliações</p>
-                    <p class="text-center">
-                        <a href="#" class="card-link btn btn-dark">Reservar</a>
-                    </p>
-                </div>
-            </div>
-
-            <div class="card text-center mt-2">
-                <div class="w-100 text-center mt-3">
-                    <img src="~/img/livro.png" class="card-img-top img-fluid" alt="Capa do Livro">
-                </div>
-                <div class="card-body">
-                    <h4 class="card-title">A Fazenda SFantasma</h4>
-                    <h5 class="lead">Gustavo F. Francelin</h5>
-                    <p>Avaliações</p>
-                    <p class="text-center">
-                        <a href="#" class="card-link btn btn-dark">Reservar</a>
-                    </p>
-                </div>
-            </div>
+        <h2 class="text-center text-white bg-transparent m-0 pt-2 text-shadow">Livros com Melhores Avaliações</h2>
+        <div class="pt-3 d-flex justify-content-evenly flex-wrap">
+            @{
+                var livrosTopAvaliados = ViewBag.LivrosTopAvaliados as IEnumerable<Biblioteca.Models.Livro> ?? Enumerable.Empty<Biblioteca.Models.Livro>();
+                var mediasTopAvaliados = ViewBag.MediasTopAvaliados as Dictionary<int, double> ?? new();
+            }
+            @if (livrosTopAvaliados.Any())
+            {
+                foreach (var livro in livrosTopAvaliados)
+                {
+                    var media = mediasTopAvaliados.ContainsKey(livro.LivroId) ? mediasTopAvaliados[livro.LivroId] : 0;
+                    <div class="card text-center mt-2 mb-3" style="width: 16rem;">
+                        <div class="w-100 text-center mt-3">
+                            <img src="@(string.IsNullOrEmpty(livro.UrlCapa) ? Url.Content("~/img/sem-imagem.jpg") : Url.Action("BuscarCapa", "Livros", new { id = livro.LivroId }))"
+                                 class="card-img-top img-fluid"
+                                 alt="Capa do Livro" style="height: 200px; object-fit: cover;" />
+                        </div>
+                        <div class="card-body pb-3">
+                            <h4 class="card-title">@livro.Titulo</h4>
+                            <h5 class="lead">@livro.Autor</h5>
+                            <p class="mb-1"><span class="badge bg-secondary">@livro.Genero?.Nome</span></p>
+                            <p class="mb-1">
+                                <span class="text-warning">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= Math.Round(media) ? "bi-star-fill" : "bi-star")"></i>
+                                    }
+                                </span>
+                                <span class="ms-2 text-dark fw-bold">(@media.ToString("0.0"))</span>
+                            </p>
+                            <p class="text-center">
+                                <form asp-controller="Reservas" asp-action="Create" method="post" class="d-inline">
+                                    <input type="hidden" name="LivroId" value="@livro.LivroId" />
+                                    <button type="submit" class="btn btn-dark p-3 m-0">
+                                        Reservar
+                                    </button>
+                                </form>
+                            </p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <span class="text-dark">Nenhum livro avaliado ainda.</span>
+            }
         </div>
     </div>
 </div>
--->
+
 
 <div id="divFooter" class="bg-dark text-center p-3">
     <p class="lead text-light pt-3">Desenvolvido com 🤍 por Prof. Cristiano de Paula</p>
