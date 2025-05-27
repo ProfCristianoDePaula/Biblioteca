@@ -2,18 +2,16 @@
 
 @{
     ViewData["Title"] = "Editar Livro";
+    var capaUrl = !string.IsNullOrEmpty(Model.UrlCapa)
+        ? Url.Action("BuscarCapa", "Livros", new { id = Model.LivroId })
+        : Url.Content("~/img/sem-imagem.jpg");
 }
 
 <div class="row">
-    <div class="col-1 col-md-2 col-lg-2">
-    </div>
-
+    <div class="col-1 col-md-2 col-lg-2"></div>
     <div class="col-10 col-md-8 col-lg-8">
-
         <div id="divLivro" class="bg-black text-light m-lg-5 p-5">
-
             <h1 class="text-center mb-3">Editar Livro</h1>
-
             <form asp-action="Edit" enctype="multipart/form-data" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="LivroId" />
@@ -36,7 +34,6 @@
                             <span asp-validation-for="Autor" class="text-danger"></span>
                         </div>
                     </div>
-
                     <div class="col-12 col-md">
                         <div class="form-group">
                             <label asp-for="Editora" class="control-label"></label>
@@ -81,7 +78,6 @@
                                 <select asp-for="GeneroId" class="form-control" asp-items="ViewBag.GeneroId">
                                     <option value="">Selecione um gênero</option>
                                 </select>
-                                <!-- Button trigger modal -->
                                 <a class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#cadGenero">
                                     <i class="bi bi-plus-circle"></i>
                                 </a>
@@ -89,7 +85,6 @@
                             <span asp-validation-for="GeneroId" class="text-danger"></span>
                         </div>
                     </div>
-
                     <div class="col-12 col-md">
                         <div class="form-group">
                             <label asp-for="Quantidade" class="control-label"></label>
@@ -118,25 +113,18 @@
 
                 <div class="row gap-3 mb-3">
                     <div class="col-3 text-center mt-3">
-                        @if (!string.IsNullOrEmpty(Model.UrlCapa))
-                        {
-                            <img src="@Url.Action("BuscarCapa", "Livros", new { id = Model.LivroId })"
-                                 class="img-thumbnail"
-                                 style="width: 100px; height: 150px; object-fit: cover;" />
-                        }
-                        else
-                        {
-                            <img src="~/img/sem-imagem.jpg" alt="Sem Capa" class="img-thumbnail" style="width: 100px; height: 150px; object-fit: cover;" />
-                        }
+                        <img id="capaPreview"
+                             src="@capaUrl"
+                             class="img-thumbnail"
+                             style="width: 100px; height: 150px; object-fit: cover;" />
                     </div>
                     <div class="col d-flex align-items-end">
-                        <div class="form-group w-100 ">
+                        <div class="form-group w-100">
                             <label asp-for="UrlCapa" class="control-label"></label>
-                            <input type="file" asp-for="UrlCapa" name="UrlCapa" class="form-control  " accept="image/*" />
+                            <input type="file" asp-for="UrlCapa" name="UrlCapa" class="form-control" accept="image/*" id="novaCapaInput" />
                             <span asp-validation-for="UrlCapa" class="text-danger"></span>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="row gap-3 mb-3">
@@ -153,8 +141,7 @@
         </div>
     </div>
 </div>
-<div class="col-1 col-md-2 col-lg-2">
-</div>
+<div class="col-1 col-md-2 col-lg-2"></div>
 
 <!-- Modal -->
 <div class="modal fade" id="cadGenero" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -191,10 +178,20 @@
             $('input[name="ISBN10"]').mask('0-000-00000-0');
             $('input[name="ISBN13"]').mask('000-0-000-00000-0');
 
+            // Preview da nova capa do livro
+            $('#novaCapaInput').on('change', function () {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#capaPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
             // Salva os dados do formulário antes do reload
             $('#formGeneroModal').on('submit', function (e) {
                 e.preventDefault();
-                // Salva todos os campos do formulário principal
                 var formData = {};
                 $('#divLivro :input').each(function () {
                     if (this.name && (this.type !== 'file')) {
