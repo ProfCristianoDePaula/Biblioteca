@@ -122,6 +122,7 @@
                             <th>Aluno</th>
                             <th>Livro</th>
                             <th>Data Prevista Devolução</th>
+                            <th>Atraso</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -132,11 +133,22 @@
                             {
                                 foreach (var mov in pendentes)
                                 {
+                                    var emAtraso = mov.DataDevolucao.HasValue && mov.DataDevolucao.Value.Date < DateTime.Now.Date;
                                     <tr>
                                         <td>@mov.DataRetirada.ToString("dd/MM/yyyy")</td>
                                         <td>@mov.Usuario?.NomeCompleto</td>
                                         <td>@mov.Livro?.Titulo</td>
                                         <td>@mov.DataDevolucao?.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @if (emAtraso)
+                                            {
+                                                <span class="badge bg-danger">Em atraso</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Em dia</span>
+                                            }
+                                        </td>
                                         <td>
                                             <a asp-controller="Movimentacoes" asp-action="Devolver" asp-route-id="@mov.MovimentacaoId" class="btn btn-light text-decoration-none">
                                                 Devolver
@@ -148,7 +160,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center">Nenhuma movimentação pendente encontrada.</td>
+                                    <td colspan="6" class="text-center">Nenhuma movimentação pendente encontrada.</td>
                                 </tr>
                             }
                         }
